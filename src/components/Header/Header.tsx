@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 const Header = () => {
   const [open, setOpen] = useState(false);
@@ -9,25 +9,45 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <img src="/images/logo.png" alt="Summit stories" className="w-14" />
-          <Link to="/" className="text-2xl font-bold text-orange-500">
+          <NavLink to="/" className="text-2xl font-bold text-orange-500">
             Summit Stories
-          </Link>
+          </NavLink>
         </div>
 
         {/* Desktop Menu */}
         <nav className="hidden md:flex gap-8 text-gray-700 font-medium">
-          <Link to="/" className="hover:text-orange-500 transition">
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
+              isActive ? "text-orange-500" : "text-gray-700"
+            }
+          >
             Home
-          </Link>
-          <Link to="/blogs" className="hover:text-orange-500 transition">
+          </NavLink>
+          <NavLink
+            to="/blogs"
+            className={({ isActive }) =>
+              isActive ? "text-orange-500" : "text-gray-700"
+            }
+          >
             Blogs
-          </Link>
-          <Link to="/gallery" className="hover:text-orange-500 transition">
+          </NavLink>
+          <NavLink
+            to="/gallery"
+            className={({ isActive }) =>
+              isActive ? "text-orange-500" : "text-gray-700"
+            }
+          >
             Gallery
-          </Link>
-          <Link to="/about" className="hover:text-orange-500 transition">
+          </NavLink>
+          <NavLink
+            to="/about"
+            className={({ isActive }) =>
+              isActive ? "text-orange-500" : "text-gray-700"
+            }
+          >
             About
-          </Link>
+          </NavLink>
         </nav>
 
         {/* Mobile Button */}
@@ -43,18 +63,18 @@ const Header = () => {
       {/* Mobile Menu */}
       {open && (
         <div className="md:hidden bg-white px-6 pb-6 space-y-4">
-          <Link to="/" onClick={() => setOpen(false)}>
+          <NavLink to="/" onClick={() => setOpen(false)}>
             Home
-          </Link>
-          <Link to="/blogs" onClick={() => setOpen(false)}>
+          </NavLink>
+          <NavLink to="/blogs" onClick={() => setOpen(false)}>
             Blogs
-          </Link>
-          <Link to="/gallery" onClick={() => setOpen(false)}>
+          </NavLink>
+          <NavLink to="/gallery" onClick={() => setOpen(false)}>
             Gallery
-          </Link>
-          <Link to="/about" onClick={() => setOpen(false)}>
+          </NavLink>
+          <NavLink to="/about" onClick={() => setOpen(false)}>
             About
-          </Link>
+          </NavLink>
         </div>
       )}
     </header>
