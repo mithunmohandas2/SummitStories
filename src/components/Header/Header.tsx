@@ -62,7 +62,7 @@ const Header = () => {
 
       {/* Mobile Menu */}
       {open && (
-        <div className="md:hidden bg-white px-6 pb-6 space-y-4">
+        <div className="md:hidden bg-white flex flex-col px-6 pb-6 space-y-4">
           <NavLink to="/" onClick={() => setOpen(false)}>
             Home
           </NavLink>

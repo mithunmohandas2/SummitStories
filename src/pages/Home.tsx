@@ -1,10 +1,7 @@
-import { useNavigate } from "react-router-dom";
 import Header from "../components/Header/Header";
-import { blogs } from "../data/blogs";
+import BlogDetails from "./BlogDetails";
 
 const Home = () => {
-  const navigate = useNavigate();
-
   return (
     <div className="min-h-screen border-b-[2rem] border-orange-400">
       <Header />
@@ -25,27 +22,12 @@ const Home = () => {
       </section>
 
       {/* Featured Destinations */}
-      <section className="bg-blue-50 py-20">
-        <div className="max-w-7xl mx-auto px-6">
-          <h3 className="text-3xl font-bold mb-10 text-center">
+      <section className="bg-blue-50 pt-20 pb-10">
+        <div className="max-w-7xl mx-auto">
+          <h3 className="text-3xl font-bold text-center px-6">
             Featured Destinations
           </h3>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {blogs.map((blog) => (
-              <div
-                onClick={() => navigate(blog?.path)}
-                key={blog.id}
-                className="rounded-2xl overflow-hidden shadow-lg hover:scale-105 transition cursor-pointer"
-              >
-                <div className="h-60 bg-gray-300"></div>
-                <div className="p-6 bg-white">
-                  <h4 className="text-xl font-semibold">{blog?.title}</h4>
-                  <p className="text-gray-500 mt-2">{blog?.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <BlogDetails limit={3} />
         </div>
       </section>
 

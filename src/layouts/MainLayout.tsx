@@ -5,7 +5,7 @@ const MainLayout = () => {
   return (
     <div className="bg-gray-50 min-h-screen border-b-[2rem] border-orange-400">
       <Header />
-      <main>
+      <main className="pt-20">
         <Outlet />
       </main>
     </div>
