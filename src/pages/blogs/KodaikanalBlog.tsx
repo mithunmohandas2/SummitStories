@@ -12,7 +12,7 @@ const KodaikanalBlog = () => {
       {/* Hero Image */}
       <div className="mb-14">
         <img
-          src="/images/kodai/hero.jpg"
+          src="/images/kodaikanal/kodaikanal.jpeg"
           alt="Kodaikanal hills"
           className="w-full h-[350px] md:h-[450px] object-cover rounded-2xl shadow-lg"
         />
@@ -72,13 +72,13 @@ const KodaikanalBlog = () => {
       {/* Section Image */}
       <div className="my-12 grid md:grid-cols-2 gap-6">
         <img
-          src="/images/kodai/poondi.jpg"
+          src="/images/kodaikanal/grasslands.jpeg"
           alt="Poondi grasslands"
           className="rounded-xl object-cover w-full h-64"
         />
 
         <img
-          src="/images/kodai/road.jpg"
+          src="/images/kodaikanal/roads.jpeg"
           alt="Road to Kodai"
           className="rounded-xl object-cover w-full h-64"
         />
@@ -133,7 +133,7 @@ const KodaikanalBlog = () => {
       {/* Kodai Lake Image */}
       <div className="my-12">
         <img
-          src="/images/kodai/lake.jpg"
+          src="/images/kodaikanal/lake.jpeg"
           alt="Kodaikanal lake sunset"
           className="w-full rounded-2xl object-cover h-[350px]"
         />
@@ -170,15 +170,15 @@ const KodaikanalBlog = () => {
       {/* Poomparai Gallery */}
       <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 my-12">
         <img
-          src="/images/kodai/poomparai1.jpg"
+          src="/images/kodaikanal/poomparai1.jpeg"
           className="rounded-lg h-52 w-full object-cover"
         />
         <img
-          src="/images/kodai/poomparai2.jpg"
+          src="/images/kodaikanal/poomparai2.jpeg"
           className="rounded-lg h-52 w-full object-cover"
         />
         <img
-          src="/images/kodai/poomparai3.jpg"
+          src="/images/kodaikanal/poomparai3.jpeg"
           className="rounded-lg h-52 w-full object-cover"
         />
       </div>
@@ -242,8 +242,8 @@ const KodaikanalBlog = () => {
       {/* Full width image */}
       <div className="my-12">
         <img
-          src="/images/kodai/kookal-road.jpg"
-          alt="Kookal road"
+          src="/images/kodaikanal/valley.jpeg"
+          alt="valley"
           className="rounded-2xl w-full object-cover h-[380px]"
         />
       </div>
@@ -274,6 +274,15 @@ const KodaikanalBlog = () => {
           down" louder than any retreat.
         </p>
       </section>
+
+      {/* Full width image */}
+      <div className="my-12">
+        <img
+          src="/images/kodaikanal/clouds.jpeg"
+          alt="Clouds"
+          className="rounded-2xl w-full object-cover h-[380px]"
+        />
+      </div>
 
       <section className="border-t pt-10 space-y-6">
         <h2 className="text-3xl font-bold">
@@ -327,7 +336,7 @@ const KodaikanalBlog = () => {
       {/* Sheep Image */}
       <div className="my-12">
         <img
-          src="/images/kodai/sheep.jpg"
+          src="/images/kodaikanal/sheep.jpeg"
           alt="Mannavannur sheep farm"
           className="w-full h-[350px] rounded-2xl object-cover"
         />

@@ -4,7 +4,7 @@ export const blogs = [
     title: "Kodaikanal",
     description:
       "Magic Mushrooms, Misty Meadows, and a Soul-Recharging Solo Spin in Kodaikanal",
-    image: "/images/kodaikanal.jpg",
+    image: "/images/kodaikanal/kodaikanal.jpeg",
     path: "/blogs/kodaikanal-trip",
   },
   {
