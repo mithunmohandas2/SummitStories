@@ -2,9 +2,32 @@
 
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useErrorToast, useSuccessToast } from "./ToastProvider";
 
 export default function AuthLinks({ onNavigate, placement = "settings" }: { onNavigate?: () => void; placement?: "navigation" | "settings" }) {
   const { status } = useSession();
+  const router = useRouter();
+  const showError = useErrorToast();
+  const showSuccess = useSuccessToast();
+  const [busy, setBusy] = useState(false);
+
+  async function logout() {
+    setBusy(true);
+    try {
+      const result = await signOut({ callbackUrl: "/", redirect: false });
+      if (!result?.url) throw new Error("Logout failed");
+      showSuccess("Logged out successfully.");
+      onNavigate?.();
+      router.push("/");
+      router.refresh();
+    } catch {
+      showError("Unable to log out. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
   if (placement === "navigation") return status === "authenticated"
     ? <Link href="/builder" className="text-orange-600 dark:text-orange-400" onClick={onNavigate}>Blog builder</Link>
     : null;
@@ -19,12 +42,10 @@ export default function AuthLinks({ onNavigate, placement = "settings" }: { onNa
   return (
       <button
         type="button"
-        onClick={() => {
-          onNavigate?.();
-          void signOut({ callbackUrl: "/" });
-        }}
+        disabled={busy}
+        onClick={logout}
       >
-        Log out
+        {busy ? "Logging out…" : "Log out"}
       </button>
   );
 }

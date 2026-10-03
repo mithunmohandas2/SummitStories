@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { BlogSummary } from "../lib/blog-schema";
+import { useErrorToast } from "../components/ToastProvider";
 
 function BlogDetails({ limit, author, showViewAll = false }: { limit?: number; author?: string; showViewAll?: boolean }) {
+  const showError = useErrorToast();
   const [blogs, setBlogs] = useState<BlogSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -12,22 +14,23 @@ function BlogDetails({ limit, author, showViewAll = false }: { limit?: number; a
     const controller = new AbortController();
     fetch(author ? `/api/blogs?author=${encodeURIComponent(author)}` : "/api/blogs", { signal: controller.signal, cache: "no-store" })
       .then(async (response) => {
-        if (!response.ok)
-          throw new Error("Unable to load blogs. Please refresh to try again.");
         const data = await response.json();
+        if (!response.ok)
+          throw new Error(data.error ?? "Unable to load blogs. Please refresh to try again.");
         setBlogs(data.blogs);
       })
       .catch((cause: unknown) => {
-        if (!controller.signal.aborted)
-          setError(
-            cause instanceof Error ? cause.message : "Unable to load blogs.",
-          );
+        if (!controller.signal.aborted) {
+          const message = cause instanceof Error ? cause.message : "Unable to load blogs.";
+          setError(message);
+          if (message === "Database unavailable") showError(message);
+        }
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [author]);
+  }, [author, showError]);
   if (loading)
     return (
       <p role="status" className="px-6 py-10 text-gray-500 dark:text-gray-400">

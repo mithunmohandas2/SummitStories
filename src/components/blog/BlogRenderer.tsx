@@ -109,13 +109,13 @@ export default function BlogRenderer({ blog }: { blog: Blog }) {
   return (
     <article className="max-w-5xl mx-auto px-6 py-16">
       <header className="mb-12 text-center">
-        <p className="text-orange-600 dark:text-orange-400 mb-4">By {blog.author}</p>
         <h1 className="text-4xl md:text-5xl font-bold leading-tight break-words">
           {blog.title || "Untitled blog"}
         </h1>
         {blog.description && (
           <p className="text-lg text-gray-600 dark:text-gray-400 mt-6">{blog.description}</p>
         )}
+        <p className="text-orange-600 dark:text-orange-400 mt-4">By {blog.author}</p>
       </header>
       <ContentBlocks blocks={blog.content} />
     </article>

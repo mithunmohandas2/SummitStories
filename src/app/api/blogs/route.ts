@@ -1,4 +1,8 @@
-import { blogSummaries } from "../../../lib/blogs";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../../../lib/auth";
+import { parseBlog } from "../../../lib/blog-schema";
+import { blogSummaries, readBlog, saveBlog } from "../../../lib/blogs";
+import { DatabaseUnavailableError, databaseUnavailableResponse } from "../../../lib/database-errors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -6,11 +10,59 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
     return Response.json(
-      { blogs: await blogSummaries(new URL(request.url).searchParams.get("author")) },
+      {
+        blogs: await blogSummaries(
+          new URL(request.url).searchParams.get("author"),
+        ),
+      },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
+    if (error instanceof DatabaseUnavailableError) return databaseUnavailableResponse();
     console.error("Unable to load blogs", error);
     return Response.json({ error: "Unable to load blogs." }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    const username = session?.user?.username;
+    if (!session?.user || !username) {
+      return Response.json({ error: "Authentication required." }, { status: 401 });
+    }
+
+    const raw = await request.text();
+    if (Buffer.byteLength(raw, "utf8") > 1024 * 1024) {
+      return Response.json({ error: "Keep the blog under 1 MB." }, { status: 413 });
+    }
+
+    const requested = parseBlog(JSON.parse(raw));
+    const blog = parseBlog({
+      ...requested,
+      author: session.user.name || username,
+      authorUsername: username,
+    });
+
+    const existing = await readBlog(blog.slug);
+    if (existing && existing.authorUsername !== username) {
+      return Response.json(
+        { error: "That blog URL is already used by another author." },
+        { status: 409 },
+      );
+    }
+
+    const saved = await saveBlog(
+      existing ? { ...blog, createdAt: existing.createdAt } : blog,
+    );
+
+    return Response.json(
+      { blog: saved, message: existing ? "Blog updated." : "Blog published." },
+      { status: existing ? 200 : 201 },
+    );
+  } catch (error) {
+    if (error instanceof DatabaseUnavailableError) return databaseUnavailableResponse();
+    console.error("Unable to save blog", error);
+    return Response.json({ error: "Unable to save blog." }, { status: 500 });
   }
 }

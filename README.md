@@ -34,7 +34,7 @@ up to three columns. Rows can contain other blocks. Use HTTPS image URLs or
 existing `/images/` paths. Images remain links in the JSON; no file upload or
 server-side publication happens when downloading.
 
-Preview uses the same renderer as published stories. **Download JSON** validates
+Preview uses the same renderer as published stories. **Export JSON** validates
 the content and saves `<Blog title>.json` (characters invalid in filenames are
 removed). **Import JSON** reopens a downloaded story. Changes remain in the
 current tab until downloaded; the editor warns before closing with changes.

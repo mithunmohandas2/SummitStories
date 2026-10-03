@@ -3,9 +3,12 @@
 import { useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useErrorToast, useSuccessToast } from "./ToastProvider";
 
 export default function LoginForm({ configured }: { configured: boolean }) {
   const router = useRouter();
+  const showError = useErrorToast();
+  const showSuccess = useSuccessToast();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -20,14 +23,17 @@ export default function LoginForm({ configured }: { configured: boolean }) {
         password: data.get("password"),
         redirect: false,
       });
-      if (!result?.ok || result.error)
+      if (!result?.ok || result.error) {
         setError("Username or password is incorrect.");
-      else {
+        showError("Login failed. Check your username and password.");
+      } else {
+        showSuccess("Logged in successfully. You can now create blogs.");
         router.push("/builder");
         router.refresh();
       }
     } catch {
       setError("Unable to log in. Please try again.");
+      showError("Unable to log in. Please try again.");
     } finally {
       setBusy(false);
     }

@@ -1,4 +1,5 @@
 import { readBlog } from "../../../../lib/blogs";
+import { DatabaseUnavailableError, databaseUnavailableResponse } from "../../../../lib/database-errors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ export async function GET(
       ? Response.json(blog, { headers: { "Cache-Control": "no-store" } })
       : Response.json({ error: "Blog not found." }, { status: 404 });
   } catch (error) {
+    if (error instanceof DatabaseUnavailableError) return databaseUnavailableResponse();
     console.error("Unable to load blog", error);
     return Response.json({ error: "Unable to load blog." }, { status: 500 });
   }

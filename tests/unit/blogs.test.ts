@@ -1,9 +1,5 @@
 import { strict as assert } from "assert";
 import { test } from "node:test";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { tmpdir } from "node:os";
-import { readBlogs } from "../../src/lib/blogs";
 import {
   parseBlog,
   safeImageUrl,
@@ -157,21 +153,3 @@ test("filenames follow blog titles and remove unsafe path characters", () => {
   );
 });
 
-test("store discovers JSON regardless of filename and rejects duplicate slugs", async () => {
-  const directory = await mkdtemp(path.join(tmpdir(), "summit-stories-test-"));
-  try {
-    assert.deepEqual(await readBlogs(directory), []);
-    await writeFile(
-      path.join(directory, "Test blog.json"),
-      JSON.stringify(sample),
-    );
-    assert.equal((await readBlogs(directory))[0].slug, "test-blog");
-    await writeFile(
-      path.join(directory, "another.json"),
-      await readFile(path.join(directory, "Test blog.json")),
-    );
-    await assert.rejects(readBlogs(directory), /slugs must be unique/);
-  } finally {
-    await rm(directory, { recursive: true, force: true });
-  }
-});

@@ -3,15 +3,16 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { getSession, useSession } from "next-auth/react";
 import Link from "next/link";
-import { ZodError } from "zod";
 import {
   downloadFilename,
   parseBlog,
   slugify,
   type Blog,
 } from "../../lib/blog-schema";
-import BlogRenderer from "../blog/BlogRenderer";
+import { ZodError } from "zod";
 import BlockEditor from "./BlockEditor";
+import BlogRenderer from "../blog/BlogRenderer";
+import { useErrorToast, useSuccessToast } from "../ToastProvider";
 
 function emptyBlog(author: string, username: string): Blog {
   return {
@@ -27,7 +28,15 @@ function emptyBlog(author: string, username: string): Blog {
   };
 }
 
-export default function BlogBuilder({ author, username }: { author: string; username: string }) {
+export default function BlogBuilder({
+  author,
+  username,
+}: {
+  author: string;
+  username: string;
+}) {
+  const showError = useErrorToast();
+  const showSuccess = useSuccessToast();
   const { status, data: session } = useSession();
   const [blog, setBlog] = useState<Blog>(() => emptyBlog(author, username));
   const [preview, setPreview] = useState(false);
@@ -95,8 +104,59 @@ export default function BlogBuilder({ author, username }: { author: string; user
       setMessage(
         `Downloaded ${downloadFilename(result.title)}. Keep the file to reopen your story later.`,
       );
+      showSuccess(`Download started: ${downloadFilename(result.title)}.`);
     } catch (cause) {
-      setError(validationError(cause));
+      const message = validationError(cause);
+      setError(message);
+      showError(`Download failed. ${message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function publish() {
+    setError("");
+    setMessage("");
+    setBusy(true);
+    try {
+      const currentSession = await getSession();
+      if (!currentSession?.user)
+        throw new Error(
+          "Your session expired. Log in again to publish your blog.",
+        );
+
+      const result = parseBlog({
+        ...blog,
+        author: currentSession.user.name ?? author,
+        authorUsername: currentSession.user.username,
+        slug: slugify(blog.title),
+      });
+
+      const response = await fetch("/api/blogs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(result),
+      });
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error ?? "Unable to publish blog.");
+
+      setBlog(data.blog);
+      dirty.current = false;
+      setMessage(data.message ?? "Blog published.");
+      showSuccess(
+        response.status === 201
+          ? "Your blog was published successfully."
+          : "Your blog was updated successfully.",
+      );
+    } catch (cause) {
+      const message = validationError(cause);
+      setError(message);
+      showError(
+        message === "Database unavailable"
+          ? message
+          : `Publish failed. ${message}`,
+      );
     } finally {
       setBusy(false);
     }
@@ -115,10 +175,12 @@ export default function BlogBuilder({ author, username }: { author: string; user
       if (file.size > 1024 * 1024)
         throw new Error("Choose a JSON file under 1 MB.");
       const imported = parseBlog(JSON.parse(await file.text()));
-      update({ ...imported, author: session?.user?.name ?? author, authorUsername: session?.user?.username ?? username });
-      setMessage(
-        "Blog imported. You can edit, preview, and download it again.",
-      );
+      update({
+        ...imported,
+        author: session?.user?.name ?? author,
+        authorUsername: session?.user?.username ?? username,
+      });
+      setMessage("Blog imported");
     } catch (cause) {
       setError(validationError(cause));
     }
@@ -137,22 +199,30 @@ export default function BlogBuilder({ author, username }: { author: string; user
         <p className="mb-4">
           Your session has ended. Log in to create and download blogs.
         </p>
-        <Link href="/login" className="text-orange-600 dark:text-orange-400 underline">
+        <Link
+          href="/login"
+          className="text-orange-600 dark:text-orange-400 underline"
+        >
           Log in
         </Link>
       </div>
     );
 
-  const field = "mt-2 w-full rounded-lg border border-gray-300 dark:border-gray-600 p-3";
+  const field =
+    "mt-2 w-full rounded-lg border border-gray-300 dark:border-gray-600 p-3";
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-12">
       <div className="mb-6">
         <div>
           <h1 className="text-4xl font-bold">Blog builder</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-3">
-            Build your story, preview it, and download it as JSON.
+            Build your story, preview it, and publish it to the website.
           </p>
-          <p className="text-orange-600 dark:text-orange-400 mb-2">Writing as {author}</p>
+          {!preview && (
+            <p className="text-orange-600 dark:text-orange-400 mb-2">
+              Writing as {author}
+            </p>
+          )}
         </div>
       </div>
       <div
@@ -170,7 +240,7 @@ export default function BlogBuilder({ author, username }: { author: string; user
         />
         <button
           type="button"
-          className="border rounded-md px-4 py-1"
+          className="border rounded-md px-4 py-1 hover:border-orange-600 hover:text-orange-600"
           onClick={() => fileInput.current?.click()}
         >
           Import
@@ -178,7 +248,7 @@ export default function BlogBuilder({ author, username }: { author: string; user
         <button
           type="button"
           aria-pressed={preview}
-          className="border rounded-md px-4 py-1"
+          className="border rounded-md px-4 py-1 hover:border-orange-600 hover:text-orange-600"
           onClick={() => setPreview(!preview)}
         >
           {preview ? "Back to editor" : "Preview"}
@@ -186,18 +256,30 @@ export default function BlogBuilder({ author, username }: { author: string; user
         <button
           type="button"
           disabled={busy}
-          className="bg-orange-500 text-white font-semibold rounded-md px-5 py-1 disabled:opacity-50"
+          className="border rounded-md px-4 py-1 disabled:opacity-50 hover:border-orange-600 hover:text-orange-600"
           onClick={download}
         >
-          {busy ? "Preparing…" : "Download"}
+          Export
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          className="bg-orange-500 text-white font-semibold rounded-md px-5 py-1 disabled:opacity-50 hover:bg-orange-600"
+          onClick={publish}
+        >
+          {busy ? "Publishing…" : "Publish"}
         </button>
       </div>
       <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
-        Your changes stay in this tab until you download them. Images use URLs;
-        downloaded files contain the links.
+        Publish saves your story to database. Download keeps a JSON backup on
+        your device. For images use URLs (downloaded files will only contain the
+        links).
       </p>
       {error && (
-        <p role="alert" className="rounded-lg bg-red-50 dark:bg-red-950 text-red-800 dark:text-red-300 p-4 mb-6">
+        <p
+          role="alert"
+          className="rounded-lg bg-red-50 dark:bg-red-950 text-red-800 dark:text-red-300 p-4 mb-6"
+        >
           {error}
         </p>
       )}

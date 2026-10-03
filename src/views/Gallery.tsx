@@ -1,9 +1,16 @@
 import { readBlogs } from "../lib/blogs";
 import { collectGalleryImages } from "../lib/gallery";
 import GalleryGrid from "../components/gallery/GalleryGrid";
+import { DatabaseUnavailableError } from "../lib/database-errors";
+import DatabaseUnavailableNotice from "../components/DatabaseUnavailableNotice";
 
 async function Gallery() {
-  const images = collectGalleryImages(await readBlogs());
+  let images;
+  try { images = collectGalleryImages(await readBlogs()); }
+  catch (error) {
+    if (error instanceof DatabaseUnavailableError) return <DatabaseUnavailableNotice />;
+    throw error;
+  }
   return (
     <section className="max-w-7xl mx-auto px-4 md:px-6 py-12">
       <h1 className="text-4xl font-bold mb-3">Gallery</h1>
