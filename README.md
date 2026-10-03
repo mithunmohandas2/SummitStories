@@ -1,9 +1,8 @@
-# Travel Diaries of Akhil S Nair
-
-Website created by Mithun Mohandas
+# Summit Stories
+A welcoming space where stories, experiences, ideas, and creativity come together
+WebBlog sharing App created by Mithun Mohandas
 
 Built with Next.js App Router, React, TypeScript, and Tailwind CSS.
-
 Requires Node.js 20.9 or newer.
 
 ```sh
