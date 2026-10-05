@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { getSession, useSession } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   downloadFilename,
   parseBlog,
@@ -40,6 +41,7 @@ export default function BlogBuilder({
 }) {
   const showError = useErrorToast();
   const showSuccess = useSuccessToast();
+  const router = useRouter();
   const { status, data: session } = useSession();
   const [blog, setBlog] = useState<Blog>(() => initialBlog ?? emptyBlog(author, username));
   const [savedSlug, setSavedSlug] = useState(initialBlog?.slug);
@@ -146,15 +148,17 @@ export default function BlogBuilder({
         throw new Error(data.error ?? "Unable to publish blog.");
 
       invalidateBlogListCache();
-      setBlog(data.blog);
-      setSavedSlug(data.blog.slug);
+      setBlog(emptyBlog(currentSession.user.name ?? author, currentSession.user.username));
+      setSavedSlug(undefined);
+      setPreview(false);
       dirty.current = false;
-      setMessage(data.message ?? "Blog published.");
+      setMessage(`${data.message ?? "Blog published."} The builder is ready for a new blog.`);
       showSuccess(
         response.status === 201
           ? "Your blog was published successfully."
           : "Your blog was updated successfully.",
       );
+      if (initialBlog) router.replace("/builder", { scroll: false });
     } catch (cause) {
       const message = validationError(cause);
       setError(message);
