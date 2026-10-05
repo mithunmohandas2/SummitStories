@@ -13,6 +13,7 @@ import { ZodError } from "zod";
 import BlockEditor from "./BlockEditor";
 import BlogRenderer from "../blog/BlogRenderer";
 import { useErrorToast, useSuccessToast } from "../ToastProvider";
+import { invalidateBlogListCache } from "../../lib/blog-list-cache";
 
 function emptyBlog(author: string, username: string): Blog {
   return {
@@ -31,14 +32,17 @@ function emptyBlog(author: string, username: string): Blog {
 export default function BlogBuilder({
   author,
   username,
+  initialBlog,
 }: {
   author: string;
   username: string;
+  initialBlog?: Blog;
 }) {
   const showError = useErrorToast();
   const showSuccess = useSuccessToast();
   const { status, data: session } = useSession();
-  const [blog, setBlog] = useState<Blog>(() => emptyBlog(author, username));
+  const [blog, setBlog] = useState<Blog>(() => initialBlog ?? emptyBlog(author, username));
+  const [savedSlug, setSavedSlug] = useState(initialBlog?.slug);
   const [preview, setPreview] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -85,7 +89,7 @@ export default function BlogBuilder({
         ...blog,
         author: currentSession.user.name ?? author,
         authorUsername: currentSession.user.username,
-        slug: slugify(blog.title),
+        slug: savedSlug ?? slugify(blog.title),
       });
       const json = JSON.stringify(result, null, 2);
       if (new Blob([json]).size > 1024 * 1024)
@@ -129,11 +133,11 @@ export default function BlogBuilder({
         ...blog,
         author: currentSession.user.name ?? author,
         authorUsername: currentSession.user.username,
-        slug: slugify(blog.title),
+        slug: savedSlug ?? slugify(blog.title),
       });
 
-      const response = await fetch("/api/blogs", {
-        method: "POST",
+      const response = await fetch(savedSlug ? `/api/blogs/${encodeURIComponent(savedSlug)}` : "/api/blogs", {
+        method: savedSlug ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(result),
       });
@@ -141,7 +145,9 @@ export default function BlogBuilder({
       if (!response.ok)
         throw new Error(data.error ?? "Unable to publish blog.");
 
+      invalidateBlogListCache();
       setBlog(data.blog);
+      setSavedSlug(data.blog.slug);
       dirty.current = false;
       setMessage(data.message ?? "Blog published.");
       showSuccess(
@@ -214,13 +220,18 @@ export default function BlogBuilder({
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-12">
       <div className="mb-6">
         <div>
-          <h1 className="text-4xl font-bold">Blog builder</h1>
+          <h1 className="text-4xl font-bold">{savedSlug ? "Edit blog" : "Blog builder"}</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-3">
             Build your story, preview it, and publish it to the website.
           </p>
           {!preview && (
             <p className="text-orange-600 dark:text-orange-400 mb-2">
               Writing as {author}
+            </p>
+          )}
+          {savedSlug && (
+            <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+              Publish updates this blog. Its URL stays the same when you change the title.
             </p>
           )}
         </div>

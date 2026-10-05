@@ -5,6 +5,8 @@ import {
   type Blog,
 } from "../../lib/blog-schema";
 import Carousel from "./Carousel";
+import BlogOwnerActions from "./BlogOwnerActions";
+import BlogImage from "./BlogImage";
 
 const columnClasses = [
   "",
@@ -13,7 +15,7 @@ const columnClasses = [
   "grid-cols-1 md:grid-cols-3",
 ];
 
-export function ContentBlocks({ blocks }: { blocks: Block[] }) {
+export function ContentBlocks({ blocks, blogTitle = "", blogSlug = "" }: { blocks: Block[]; blogTitle?: string; blogSlug?: string }) {
   return (
     <div className="space-y-8 min-w-0">
       {blocks.map((block) => {
@@ -41,12 +43,7 @@ export function ContentBlocks({ blocks }: { blocks: Block[] }) {
             return (
               <figure key={block.id} className="space-y-3">
                 {safeImageUrl(block.src) ? (
-                  <img
-                    src={block.src}
-                    alt={block.alt}
-                    loading="lazy"
-                    className="w-full max-h-[480px] object-cover rounded-2xl"
-                  />
+                  <BlogImage image={block} blogTitle={blogTitle} blogSlug={blogSlug} />
                 ) : (
                   <div className="p-8 bg-gray-100 dark:bg-gray-800 rounded-xl">
                     Add an image URL.
@@ -87,7 +84,7 @@ export function ContentBlocks({ blocks }: { blocks: Block[] }) {
             );
           }
           case "carousel":
-            return <Carousel key={block.id} images={block.images} />;
+            return <Carousel key={block.id} images={block.images} blogTitle={blogTitle} blogSlug={blogSlug} />;
           case "row":
             return (
               <div
@@ -95,7 +92,7 @@ export function ContentBlocks({ blocks }: { blocks: Block[] }) {
                 className={`grid gap-6 ${columnClasses[block.columns.length] ?? columnClasses[1]}`}
               >
                 {block.columns.map((column) => (
-                  <ContentBlocks key={column.id} blocks={column.content} />
+                  <ContentBlocks key={column.id} blocks={column.content} blogTitle={blogTitle} blogSlug={blogSlug} />
                 ))}
               </div>
             );
@@ -105,9 +102,9 @@ export function ContentBlocks({ blocks }: { blocks: Block[] }) {
   );
 }
 
-export default function BlogRenderer({ blog }: { blog: Blog }) {
+export default function BlogRenderer({ blog, showEdit = false }: { blog: Blog; showEdit?: boolean }) {
   return (
-    <article className="max-w-5xl mx-auto px-6 py-16">
+    <article className="max-w-5xl mx-auto px-6 py-16 bg-white dark:bg-gray-950">
       <header className="mb-12 text-center">
         <h1 className="text-4xl md:text-5xl font-bold leading-tight break-words">
           {blog.title || "Untitled blog"}
@@ -116,8 +113,9 @@ export default function BlogRenderer({ blog }: { blog: Blog }) {
           <p className="text-lg text-gray-600 dark:text-gray-400 mt-6">{blog.description}</p>
         )}
         <p className="text-orange-600 dark:text-orange-400 mt-4">By {blog.author}</p>
+        {showEdit && <BlogOwnerActions slug={blog.slug} title={blog.title} authorUsername={blog.authorUsername} />}
       </header>
-      <ContentBlocks blocks={blog.content} />
+      <ContentBlocks blocks={blog.content} blogTitle={blog.title} blogSlug={blog.slug} />
     </article>
   );
 }

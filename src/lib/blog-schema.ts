@@ -109,6 +109,7 @@ export const blogSchema = z.object({
       "Use an HTTPS image URL or a local /images/ path.",
     ),
   createdAt: z.iso.datetime(),
+  publishedAt: z.iso.datetime().optional(),
   content: z.array(blockSchema).min(1).max(100),
 });
 export type Blog = z.infer<typeof blogSchema>;

@@ -35,5 +35,5 @@ export default async function BlogPage({
     throw error;
   }
   if (!blog) notFound();
-  return <BlogRenderer blog={blog} />;
+  return <BlogRenderer blog={blog} showEdit />;
 }

@@ -11,6 +11,7 @@ export default function ImageViewer({
   onDismiss: () => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const fullscreenRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const nativeFullscreen = useRef(false);
   const [expanded, setExpanded] = useState(false);
@@ -18,6 +19,7 @@ export default function ImageViewer({
 
   useEffect(() => {
     const dialog = dialogRef.current;
+    const fullscreen = fullscreenRef.current;
     if (!dialog) return;
     const opener = document.activeElement;
     const previousOverflow = document.body.style.overflow;
@@ -25,7 +27,7 @@ export default function ImageViewer({
     closeRef.current?.focus();
     document.body.style.overflow = "hidden";
     const updateFullscreen = () => {
-      if (document.fullscreenElement === dialog) {
+      if (fullscreen && document.fullscreenElement === fullscreen) {
         nativeFullscreen.current = true;
         setExpanded(true);
       } else if (nativeFullscreen.current) {
@@ -36,7 +38,7 @@ export default function ImageViewer({
     document.addEventListener("fullscreenchange", updateFullscreen);
     return () => {
       document.removeEventListener("fullscreenchange", updateFullscreen);
-      if (document.fullscreenElement === dialog)
+      if (fullscreen && document.fullscreenElement === fullscreen)
         void document.exitFullscreen().catch(() => {});
       dialog.close();
       document.body.style.overflow = previousOverflow;
@@ -45,10 +47,10 @@ export default function ImageViewer({
   }, []);
 
   async function toggleFullscreen() {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
+    const fullscreen = fullscreenRef.current;
+    if (!fullscreen) return;
     if (expanded) {
-      if (document.fullscreenElement === dialog) {
+      if (document.fullscreenElement === fullscreen) {
         try {
           await document.exitFullscreen();
         } catch {
@@ -61,14 +63,13 @@ export default function ImageViewer({
     // Fill the viewport even on browsers without the native Fullscreen API.
     setExpanded(true);
     try {
-      await dialog.requestFullscreen?.();
+      await fullscreen.requestFullscreen?.();
     } catch {
       /* Keep the viewport-sized viewer. */
     }
   }
 
-  const controls =
-    "rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800";
+  const controls = "px-1 text-sm hover:bg-gray-100 dark:hover:bg-gray-800";
   return (
     <dialog
       ref={dialogRef}
@@ -90,7 +91,7 @@ export default function ImageViewer({
       }}
       className={`gallery-dialog m-auto p-0 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 shadow-2xl backdrop:bg-black/80 ${expanded ? "w-screen h-[100dvh] max-w-none max-h-none rounded-none" : "w-[calc(100%_-_2rem)] max-w-6xl max-h-[calc(100dvh_-_2rem)] rounded-2xl"}`}
     >
-      <div className="flex h-full flex-col">
+      <div ref={fullscreenRef} className="flex h-full flex-col bg-white dark:bg-gray-950">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-3">
           <span className="text-sm text-gray-600 dark:text-gray-400">
             {image.blogTitle}
@@ -100,8 +101,10 @@ export default function ImageViewer({
               type="button"
               className={controls}
               onClick={toggleFullscreen}
+              aria-label={expanded ? "Exit fullscreen" : "Fullscreen"}
+              title={expanded ? "Exit fullscreen" : "Fullscreen"}
             >
-              {expanded ? "Exit fullscreen" : "Fullscreen"}
+              {expanded ? "🗗" : "⛶"}
             </button>
             <button
               ref={closeRef}
@@ -109,8 +112,9 @@ export default function ImageViewer({
               className={controls}
               onClick={onDismiss}
               aria-label="Close image viewer"
+              title={"Close"}
             >
-              Close
+              <span className="text-red-900">🗙</span>
             </button>
           </div>
         </div>

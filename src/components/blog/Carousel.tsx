@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { safeImageUrl, type ImageItem } from "../../lib/blog-schema";
+import BlogImage from "./BlogImage";
 
-export default function Carousel({ images }: { images: ImageItem[] }) {
+export default function Carousel({ images, blogTitle = "", blogSlug = "" }: { images: ImageItem[]; blogTitle?: string; blogSlug?: string }) {
   const [index, setIndex] = useState(0);
   const selected = Math.min(index, Math.max(0, images.length - 1));
   const image = images[selected];
@@ -20,11 +21,7 @@ export default function Carousel({ images }: { images: ImageItem[] }) {
       aria-label="Image carousel"
     >
       {safeImageUrl(image.src) ? (
-        <img
-          src={image.src}
-          alt={image.alt}
-          className="w-full max-h-[480px] object-cover rounded-2xl"
-        />
+        <BlogImage key={selected} image={image} blogTitle={blogTitle} blogSlug={blogSlug} />
       ) : (
         <div className="rounded-xl bg-gray-100 dark:bg-gray-800 p-8">Add a valid image URL.</div>
       )}

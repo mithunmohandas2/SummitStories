@@ -50,7 +50,7 @@ const Header = () => {
           <img
             src="/images/logo.webp"
             alt="Summit stories"
-            className="w-8 sm:w-14"
+            className="w-8"
           />
           <Link
             href="/"
