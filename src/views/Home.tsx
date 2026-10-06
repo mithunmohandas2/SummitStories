@@ -23,7 +23,7 @@ const Home = () => {
       </section>
 
       {/* Latest Blogs */}
-      <section className="py-20 bg-white dark:bg-gray-900">
+      <section className="py-4 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-6">
           <h3 className="text-3xl font-bold mb-10 text-center">Latest Blogs</h3>
           <BlogDetails limit={6} showViewAll />

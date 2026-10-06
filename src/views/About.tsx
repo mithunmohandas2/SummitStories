@@ -2,7 +2,7 @@ function About() {
   return (
     <div className="min-h-screen border-b-[2rem] border-orange-400">
       {/* Hero Section */}
-      <section className="pt-28 pb-20 bg-blue-50 dark:bg-slate-900">
+      <section className="py-12 bg-blue-50 dark:bg-slate-900">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <span className="inline-block px-4 py-2 mb-5 text-sm font-semibold text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-950/40 rounded-full">
             About Us
@@ -21,7 +21,7 @@ function About() {
       </section>
 
       {/* About Content */}
-      <section className="py-20 bg-white dark:bg-gray-900">
+      <section className="py-10 bg-white dark:bg-gray-900">
         <div className="max-w-5xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left */}
@@ -95,7 +95,7 @@ function About() {
       </section>
 
       {/* Bottom Message */}
-      <section className="py-20 bg-blue-50 dark:bg-slate-900">
+      <section className="py-10 bg-blue-50 dark:bg-slate-900">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-5">
             Everyone has a story worth sharing.

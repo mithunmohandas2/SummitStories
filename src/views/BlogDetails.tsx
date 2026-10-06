@@ -104,7 +104,7 @@ function BlogDetails({
             : "No stories published yet."}
         </p>
       )}
-      <div className="grid md:grid-cols-3 gap-8 px-6 py-10">
+      <div className="grid md:grid-cols-3 gap-8 p-6">
         {displayedBlogs.map((blog) => (
           <article
             key={blog.slug}
