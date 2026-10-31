@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import MainLayout from "../layouts/MainLayout";
 import AuthProvider from "../components/AuthProvider";
 import ToastProvider from "../components/ToastProvider";
+import PwaProvider from "../components/pwa/PwaProvider";
 import { themeInitializationScript } from "../lib/theme";
 import "../index.css";
 
@@ -13,7 +14,20 @@ export const metadata: Metadata = {
   },
   description:
     "A Blog to share travel diaries, stories, captured images, and unforgettable adventures.",
-  icons: { icon: "/images/logo.webp" },
+  applicationName: "Summit Stories",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Summit Stories",
+    statusBarStyle: "default",
+  },
+  icons: { icon: "/images/logo.webp", apple: "/icons/apple-touch-icon.png" },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#f97316",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -25,7 +39,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
         <ToastProvider>
           <AuthProvider>
-            <MainLayout>{children}</MainLayout>
+            <PwaProvider>
+              <MainLayout>{children}</MainLayout>
+            </PwaProvider>
           </AuthProvider>
         </ToastProvider>
       </body>

@@ -15,6 +15,8 @@ import BlockEditor from "./BlockEditor";
 import BlogRenderer from "../blog/BlogRenderer";
 import { useErrorToast, useSuccessToast } from "../ToastProvider";
 import { invalidateBlogListCache } from "../../lib/blog-list-cache";
+import BuilderMediaProvider, { useBuilderMedia } from "./BuilderMediaProvider";
+import ImageSourceInput from "./ImageSourceInput";
 
 function emptyBlog(author: string, username: string): Blog {
   return {
@@ -30,7 +32,7 @@ function emptyBlog(author: string, username: string): Blog {
   };
 }
 
-export default function BlogBuilder({
+function BlogBuilderForm({
   author,
   username,
   initialBlog,
@@ -39,11 +41,14 @@ export default function BlogBuilder({
   username: string;
   initialBlog?: Blog;
 }) {
+  const media = useBuilderMedia();
   const showError = useErrorToast();
   const showSuccess = useSuccessToast();
   const router = useRouter();
   const { status, data: session } = useSession();
-  const [blog, setBlog] = useState<Blog>(() => initialBlog ?? emptyBlog(author, username));
+  const [blog, setBlog] = useState<Blog>(
+    () => initialBlog ?? emptyBlog(author, username),
+  );
   const [savedSlug, setSavedSlug] = useState(initialBlog?.slug);
   const [preview, setPreview] = useState(false);
   const [message, setMessage] = useState("");
@@ -138,21 +143,33 @@ export default function BlogBuilder({
         slug: savedSlug ?? slugify(blog.title),
       });
 
-      const response = await fetch(savedSlug ? `/api/blogs/${encodeURIComponent(savedSlug)}` : "/api/blogs", {
-        method: savedSlug ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(result),
-      });
+      const response = await fetch(
+        savedSlug
+          ? `/api/blogs/${encodeURIComponent(savedSlug)}`
+          : "/api/blogs",
+        {
+          method: savedSlug ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(result),
+        },
+      );
       const data = await response.json();
       if (!response.ok)
         throw new Error(data.error ?? "Unable to publish blog.");
 
       invalidateBlogListCache();
-      setBlog(emptyBlog(currentSession.user.name ?? author, currentSession.user.username));
+      setBlog(
+        emptyBlog(
+          currentSession.user.name ?? author,
+          currentSession.user.username,
+        ),
+      );
       setSavedSlug(undefined);
       setPreview(false);
       dirty.current = false;
-      setMessage(`${data.message ?? "Blog published."} The builder is ready for a new blog.`);
+      setMessage(
+        `${data.message ?? "Blog published."} The builder is ready for a new blog.`,
+      );
       showSuccess(
         response.status === 201
           ? "Your blog was published successfully."
@@ -224,7 +241,9 @@ export default function BlogBuilder({
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-12">
       <div className="mb-6">
         <div>
-          <h1 className="text-4xl font-bold">{savedSlug ? "Edit blog" : "Blog builder"}</h1>
+          <h1 className="text-4xl font-bold">
+            {savedSlug ? "Edit blog" : "Blog builder"}
+          </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-3">
             Build your story, preview it, and publish it to the website.
           </p>
@@ -235,7 +254,8 @@ export default function BlogBuilder({
           )}
           {savedSlug && (
             <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-              Publish updates this blog. Its URL stays the same when you change the title.
+              Publish updates this blog. Its URL stays the same when you change
+              the title.
             </p>
           )}
         </div>
@@ -256,6 +276,7 @@ export default function BlogBuilder({
         <button
           type="button"
           className="border rounded-md px-4 py-1 hover:border-orange-600 hover:text-orange-600"
+          disabled={busy || media.busy}
           onClick={() => fileInput.current?.click()}
         >
           Import
@@ -263,6 +284,7 @@ export default function BlogBuilder({
         <button
           type="button"
           aria-pressed={preview}
+          disabled={busy || media.busy}
           className="border rounded-md px-4 py-1 hover:border-orange-600 hover:text-orange-600"
           onClick={() => setPreview(!preview)}
         >
@@ -270,7 +292,7 @@ export default function BlogBuilder({
         </button>
         <button
           type="button"
-          disabled={busy}
+          disabled={busy || media.busy}
           className="border rounded-md px-4 py-1 disabled:opacity-50 hover:border-orange-600 hover:text-orange-600"
           onClick={download}
         >
@@ -278,7 +300,7 @@ export default function BlogBuilder({
         </button>
         <button
           type="button"
-          disabled={busy}
+          disabled={busy || media.busy}
           className="bg-orange-500 text-white font-semibold rounded-md px-5 py-1 disabled:opacity-50 hover:bg-orange-600"
           onClick={publish}
         >
@@ -287,8 +309,8 @@ export default function BlogBuilder({
       </div>
       <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
         Publish saves your story to database. Download keeps a JSON backup on
-        your device. For images use URLs (downloaded files will only contain the
-        links).
+        your device. Attach image files or paste image URLs. Downloaded JSON
+        stores the image links.
       </p>
       {error && (
         <p
@@ -311,7 +333,10 @@ export default function BlogBuilder({
           <BlogRenderer blog={blog} />
         </div>
       ) : (
-        <div className="grid lg:grid-cols-[300px_1fr] gap-8 items-start">
+        <fieldset
+          disabled={busy || media.busy}
+          className="grid min-w-0 lg:grid-cols-[300px_1fr] gap-8 items-start"
+        >
           <aside className="rounded-2xl border bg-white dark:bg-gray-900 p-6 space-y-5">
             <h2 className="text-xl font-semibold">Story details</h2>
             <label className="block text-sm font-medium">
@@ -343,18 +368,11 @@ export default function BlogBuilder({
                 placeholder="A short introduction for the blog listing"
               />
             </label>
-            <label className="block text-sm font-medium">
-              Cover image URL
-              <input
-                value={blog.coverImage}
-                maxLength={2048}
-                onChange={(event) =>
-                  update({ ...blog, coverImage: event.target.value })
-                }
-                placeholder="https://… or /images/…"
-                className={field}
-              />
-            </label>
+            <ImageSourceInput
+              cover
+              value={blog.coverImage}
+              onChange={(coverImage) => update({ ...blog, coverImage })}
+            />
             <p className="text-sm text-gray-500 dark:text-gray-400">
               The cover is used in blog listings. Add an image block to show it
               in your story.
@@ -373,8 +391,18 @@ export default function BlogBuilder({
               onChange={(content) => update({ ...blog, content })}
             />
           </section>
-        </div>
+        </fieldset>
       )}
     </div>
+  );
+}
+
+export default function BlogBuilder(
+  props: Parameters<typeof BlogBuilderForm>[0],
+) {
+  return (
+    <BuilderMediaProvider>
+      <BlogBuilderForm {...props} />
+    </BuilderMediaProvider>
   );
 }

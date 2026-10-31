@@ -65,7 +65,9 @@ export default function DeleteBlogDialog({
         className="mt-3 break-words text-sm text-gray-600 dark:text-gray-300"
       >
         Delete “{title}”? This permanently removes the blog and cannot be
-        undone.
+        undone. Cloudinary images in this account will also be deleted unless
+        they are still used by another blog. Other users' uploads and external
+        images are kept.
       </p>
       {error && (
         <p role="alert" className="mt-4 text-sm text-red-700 dark:text-red-300">

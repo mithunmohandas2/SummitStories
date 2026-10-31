@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useErrorToast, useSuccessToast } from "./ToastProvider";
@@ -11,6 +11,8 @@ export default function LoginForm({ configured }: { configured: boolean }) {
   const showSuccess = useSuccessToast();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const passwordId = useId();
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -59,17 +61,34 @@ export default function LoginForm({ configured }: { configured: boolean }) {
           className="mt-2 w-full rounded-lg border p-3"
         />
       </label>
-      <label className="block">
-        Password
-        <input
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          maxLength={256}
-          className="mt-2 w-full rounded-lg border p-3"
-        />
-      </label>
+      <div>
+        <label htmlFor={passwordId} className="block">Password</label>
+        <div className="relative mt-2">
+          <input
+            id={passwordId}
+            name="password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            required
+            maxLength={256}
+            className="w-full rounded-lg border p-3 pr-12 [&::-ms-reveal]:hidden"
+          />
+          <button
+            type="button"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+            aria-controls={passwordId}
+            onClick={() => setShowPassword(visible => !visible)}
+            className="absolute inset-y-0 right-0 flex items-center justify-center rounded-r-lg px-3 text-gray-500 hover:text-orange-600 dark:text-gray-400 dark:hover:text-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-500"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+              <circle cx="12" cy="12" r="3" />
+              {showPassword && <path d="m3 3 18 18" />}
+            </svg>
+          </button>
+        </div>
+      </div>
       {error && (
         <p role="alert" className="text-red-700 dark:text-red-300">
           {error}

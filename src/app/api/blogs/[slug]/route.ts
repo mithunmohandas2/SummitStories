@@ -4,11 +4,18 @@ import {
   updateBlog,
   invalidateBlogCache,
   deleteBlog,
+  readBlogsFresh,
 } from "../../../../lib/blogs";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../../lib/auth";
 import { parseBlog } from "../../../../lib/blog-schema";
 import { ZodError } from "zod";
+import { deleteUnsharedBlogImages } from "../../../../lib/blog-image-cleanup";
+import { ImageStorageError } from "../../../../lib/cloudinary";
+import {
+  blogImageUrls,
+  cloudinaryImageAsset,
+} from "../../../../lib/image-assets";
 import {
   DatabaseUnavailableError,
   databaseUnavailableResponse,
@@ -17,26 +24,65 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ slug: string }> },
+) {
   try {
     const session = await getServerSession(authOptions);
     const username = session?.user?.username;
-    if (!username) return Response.json({ error: "Authentication required." }, { status: 401 });
+    if (!username)
+      return Response.json(
+        { error: "Authentication required." },
+        { status: 401 },
+      );
     const { slug } = await params;
     if (slug.length > 150 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))
       return Response.json({ error: "Blog not found." }, { status: 404 });
     const existing = await readBlogFresh(slug);
-    if (!existing) return Response.json({ error: "Blog not found." }, { status: 404 });
+    if (!existing)
+      return Response.json({ error: "Blog not found." }, { status: 404 });
     if (existing.authorUsername !== username)
-      return Response.json({ error: "You can only delete your own blogs." }, { status: 403 });
-    if (!await deleteBlog(slug, username))
-      return Response.json({ error: "This blog is no longer available to delete." }, { status: 404 });
+      return Response.json(
+        { error: "You can only delete your own blogs." },
+        { status: 403 },
+      );
+    let deletedImages = 0;
+    if (blogImageUrls(existing).some((url) => cloudinaryImageAsset(url))) {
+      const otherBlogs = (await readBlogsFresh()).filter(
+        (blog) => blog.slug !== slug,
+      );
+      deletedImages = await deleteUnsharedBlogImages(
+        existing,
+        otherBlogs,
+        username,
+      );
+    }
+    if (!(await deleteBlog(slug, username)))
+      return Response.json(
+        { error: "This blog is no longer available to delete." },
+        { status: 404 },
+      );
     invalidateBlogCache();
-    return Response.json({ message: "Blog deleted successfully." });
+    return Response.json({
+      message: "Blog deleted successfully.",
+      deletedImages,
+    });
   } catch (error) {
-    if (error instanceof DatabaseUnavailableError) return databaseUnavailableResponse();
+    if (error instanceof DatabaseUnavailableError)
+      return databaseUnavailableResponse();
+    if (error instanceof ImageStorageError)
+      return Response.json(
+        {
+          error: `Image cleanup failed. The blog was not deleted. ${error.message}`,
+        },
+        { status: error.status, headers: { "Cache-Control": "no-store" } },
+      );
     console.error("Unable to delete blog", error);
-    return Response.json({ error: "Unable to delete this blog. Please try again." }, { status: 500 });
+    return Response.json(
+      { error: "Unable to delete this blog. Please try again." },
+      { status: 500 },
+    );
   }
 }
 

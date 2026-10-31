@@ -27,7 +27,7 @@ async function blogCollection() {
   return collection;
 }
 
-async function readBlogsFromDatabase(): Promise<Blog[]> {
+export async function readBlogsFresh(): Promise<Blog[]> {
   const collection = await blogCollection();
   const documents = await collection
     .find({})
@@ -47,7 +47,7 @@ export async function readBlogFresh(slug: string): Promise<Blog | null> {
 // Share database results across API requests and page renders for 90 seconds.
 // React cache also deduplicates metadata and content reads in the same render.
 export const readBlogs = cache(
-  unstable_cache(readBlogsFromDatabase, ["blog-list", databaseCacheKey], {
+  unstable_cache(readBlogsFresh, ["blog-list", databaseCacheKey], {
     tags: [BLOG_CACHE_TAG],
     revalidate: 90,
   }),
@@ -85,7 +85,10 @@ export async function updateBlog(
   return result.matchedCount === 1 ? parsed : null;
 }
 
-export async function deleteBlog(slug: string, username: string): Promise<boolean> {
+export async function deleteBlog(
+  slug: string,
+  username: string,
+): Promise<boolean> {
   const collection = await blogCollection();
   const result = await collection.deleteOne({ slug, authorUsername: username });
   return result.deletedCount === 1;
