@@ -4,6 +4,7 @@ import { readBlog } from "../../../lib/blogs";
 import BlogRenderer from "../../../components/blog/BlogRenderer";
 import { DatabaseUnavailableError } from "../../../lib/database-errors";
 import DatabaseUnavailableNotice from "../../../components/DatabaseUnavailableNotice";
+import { blogMetadata } from "../../../lib/blog-metadata";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ export async function generateMetadata({
   try {
     const blog = await readBlog((await params).slug);
     return blog
-      ? { title: blog.title, description: blog.description }
+      ? blogMetadata(blog)
       : { title: "Blog not found" };
   } catch (error) {
     if (error instanceof DatabaseUnavailableError) return { title: "Blog unavailable" };

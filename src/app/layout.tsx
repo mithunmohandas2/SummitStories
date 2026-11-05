@@ -5,9 +5,11 @@ import AuthProvider from "../components/AuthProvider";
 import ToastProvider from "../components/ToastProvider";
 import PwaProvider from "../components/pwa/PwaProvider";
 import { themeInitializationScript } from "../lib/theme";
+import { siteUrl } from "../lib/blog-metadata";
 import "../index.css";
 
 export const metadata: Metadata = {
+  metadataBase: siteUrl(),
   title: {
     default: "Summit Stories",
     template: "%s | Summit Stories",

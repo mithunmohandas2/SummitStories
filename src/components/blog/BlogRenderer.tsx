@@ -62,7 +62,7 @@ export function ContentBlocks({ blocks, blogTitle = "", blogSlug = "" }: { block
               <figure key={block.id} className="space-y-3">
                 {id ? (
                   <iframe
-                    src={`https://www.youtube-nocookie.com/embed/${id}`}
+                    src={`https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&playsinline=1`}
                     title={block.caption || "YouTube video"}
                     loading="lazy"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
